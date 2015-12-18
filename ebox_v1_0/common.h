@@ -54,8 +54,8 @@ typedef enum
 #define NVIC_GROUP_CONFIG NVIC_PriorityGroup_2   /*!< 2 bits for pre-emption priority
 												      2 bits for subpriority */
 
-#define interrupts() 		__enable_irq()
-#define no_interrupts() 	__disable_irq()
+#define interrupts() 		__enable_irq()  //允许中断
+#define no_interrupts() 	__disable_irq() //关闭所有中断
 	
 ///////全局变量、函数///////////////////////////////////////////////
 extern __IO uint32_t millis_seconds;
@@ -65,28 +65,28 @@ typedef void (*callback_fun_type)(void);
 void        ebox_init(void);	
 void        ADC1_init(void);
 uint32_t    millis( void ) ;
-void        delay_ms(uint32_t ms);
-void        delay_us(uint16_t us);
-void        delayus(uint32_t us);
+void        delay_ms(uint32_t ms);  //精确延时，毫秒级
+void        delay_us(uint16_t us);  //精确延时，微妙级
+void        delayus(uint32_t us);   //软件模拟延时，在有中断的情况下，无法保证精度！
 
 class GPIO
 {
     public:
         GPIO(GPIO_TypeDef *port, uint16_t pin);
-        void mode(PIN_MODE mode);
-        void set();
-        void reset();
-        void write(uint8_t val);
-        void toggle();	
-        void read(uint8_t *val);
-        uint8_t read(void);
+        void mode(PIN_MODE mode);               //引脚模式设置，参数为PIN_MODE类型的值。
+        void set();                             //引脚设置为1
+        void reset();                           //引脚设置为0
+        void write(uint8_t val);                //引脚设置为val(val为0，输出0，不为0输出1)
+        void toggle();	                        //引脚输出翻转
+        void read(uint8_t *val);                //读引脚数字电平，将结果赋值给val。
+        uint8_t read(void);                     //读引脚数字电平，将结果返回。
 
         GPIO_TypeDef* port;
         uint16_t pin;	
 };
 
-uint16_t	analog_read(GPIO *pin);	
-uint16_t	analog_read_voltage(GPIO *pin); 
+uint16_t	analog_read(GPIO *pin);	        //读取pin的模拟量，返回0~4095
+uint16_t	analog_read_voltage(GPIO *pin); //读取pin的模拟电压，0~3300，单位mv
 
 void        shift_out(GPIO *data_pin, GPIO *clock_pin, uint8_t bit_order, uint8_t val);
 uint8_t		shift_in(GPIO *data_pin, GPIO *clock_pin, uint8_t bit_order);
