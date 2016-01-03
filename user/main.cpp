@@ -1,94 +1,95 @@
+/*
+file   : *.cpp
+author : shentq
+version: V1.0
+date   : 2015/7/5
 
+Copyright 2015 shentq. All Rights Reserved.
+*/
+#include "freertos.h"
+#include "task.h"
+#include "queue.h"
+
+//STM32 RUN IN eBox
 #include "ebox.h"
-#include "os.h"
+#define LED_0 0
+#define LED_1 1
+#define LED_2 2
+#define LED_3 3
+
+void led_on(int n) 
+{
+	switch (n) 
+	{
+		case LED_0:
+			PB8 = 1;
+			break;
+		case LED_1:
+			PB9 = 1;
+			break;
+		case LED_2:
+			PB10 = 1;
+			break;
+		default:
+			break;
+	}
+}
+
+void led_off(int n)
+{
+	switch (n) 
+	{
+		case LED_0:
+			PB8 = 0;
+			break;
+		case LED_1:
+			PB9 = 0;
+			break;
+		case LED_2:
+			PB10 = 0;
+			break;
+		default:
+			break;
+	}
+}
 
 
-#define TASK_1_STK_SIZE 128
-#define TASK_2_STK_SIZE 128
-#define TASK_3_STK_SIZE 128
-#define TASK_4_STK_SIZE 128
-
-static STACK_TypeDef TASK_1_STK[TASK_1_STK_SIZE];
-static STACK_TypeDef TASK_2_STK[TASK_2_STK_SIZE];
-static STACK_TypeDef TASK_3_STK[TASK_3_STK_SIZE];
-static STACK_TypeDef TASK_4_STK[TASK_4_STK_SIZE];
-
-#define TASK1_PRIO 0
-#define TASK2_PRIO 1
-#define TASK3_PRIO 2
-#define TASK4_PRIO 3
-void task_1();
-void task_2();
-void task_3();
-
-
-float cpu;
-INT16U mem;
-u8 task2count = 0;
+static void vLEDTask( void *pvParameters )
+{
+    while(1)
+    {
+        led_on((int)pvParameters);
+        vTaskDelay(500/portTICK_RATE_MS);
+        led_off((int)pvParameters);
+        vTaskDelay(500/portTICK_RATE_MS);
+    }
+}
 
 void setup()
 {
 	ebox_init();
-	OS_Init();
-	
-	uart1.begin(9600);
-	uart1.printf("\r\nuart1 9600 ok!");
-	
-		uart1.printf("\r\nos初始化!");
+	PB8.mode(OUTPUT_PP);
+	PB9.mode(OUTPUT_PP);
+	PB10.mode(OUTPUT_PP);
+    attch_sys_ticks_interrupt(xPortSysTickHandler);
+    
+    xTaskCreate( vLEDTask, "LED0", configMINIMAL_STACK_SIZE, (void *)0, tskIDLE_PRIORITY+3, NULL );
+    xTaskCreate( vLEDTask, "LED1", configMINIMAL_STACK_SIZE, (void *)1, tskIDLE_PRIORITY+3, NULL );
+    xTaskCreate( vLEDTask, "LED2", configMINIMAL_STACK_SIZE, (void *)2, tskIDLE_PRIORITY+3, NULL );
 
-	OS_TaskCreate(task_1,&TASK_1_STK[TASK_1_STK_SIZE-1],TASK1_PRIO);
-	OS_TaskCreate(task_2,&TASK_2_STK[TASK_2_STK_SIZE-1],TASK2_PRIO);
-	OS_TaskCreate(task_3,&TASK_3_STK[TASK_3_STK_SIZE-1],TASK3_PRIO);
-			uart1.printf("\r\nos创建任务成功");
-
-	OS_Start();
+    /* Start the scheduler. */
+    vTaskStartScheduler();
 
 }
-void task_1()
-{
-	while(1)
-	{
-		uart1.printf("Task 1 Running!!!\r\n");
-		OS_DelayTimes(1000);
-	}
-}
-void task_2()
-{
-  while(1)
-	{
-		task2count++;
-		uart1.printf("Task 2 Running!!!,runtimes = %d\r\n",task2count);
-		OS_DelayTimes(1000);
-	}
-
-}
-void task_3()
-{
-  while(1)
-	{
-		uart1.printf("Task 3 Running!!!\r\n");
-		cpu = OS_GetCPU();
-		mem = OS_GetStackMaxUsage(TASK_3_STK,TASK_3_STK_SIZE);
-		uart1.printf("cpu = %0.1f%%\r\n",cpu);
-		uart1.printf("task3：mem = %02d%%\r\n",mem);
-		OS_DelayTimes(1000);
-	}
-
-}
-
 int main(void)
 {
-
 	setup();
-
 	while(1)
 	{
-
 	}
 
+    return 0;
 
 }
-
-
 
 
